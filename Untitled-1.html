@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería de Fotos</title>
+    
+    <style>
+        /* Variables de color y diseño */
+        :root {
+            --bg-principal: #0f172a;
+            --bg-tarjeta: #1e293b;
+            --color-primario: #38bdf8;
+            --color-texto: #f8fafc;
+            --color-subtexto: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--color-texto);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* Encabezado */
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--color-primario);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--color-subtexto);
+            font-size: 1.1rem;
+        }
+
+        /* Controles: Buscador y Filtros */
+        .controles {
+            max-width: 1200px;
+            margin: 20px auto 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .buscador {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .buscador input {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid #334155;
+            background-color: var(--bg-tarjeta);
+            color: var(--color-texto);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .buscador input:focus {
+            border-color: var(--color-primario);
+        }
+
+        .filtros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-filtro {
+            padding: 8px 18px;
+            border: none;
+            background-color: var(--bg-tarjeta);
+            color: var(--color-subtexto);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-filtro:hover, .btn-filtro.activo {
+            background-color: var(--color-primario);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Galería Grid */
+        .galeria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tarjeta {
+            background-color: var(--bg-tarjeta);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tarjeta:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.2);
+        }
+
+        .tarjeta-img {
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+        }
+
+        .tarjeta-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .tarjeta:hover .tarjeta-img img {
+            transform: scale(1.08);
+        }
+
+        .tarjeta-info {
+            padding: 15px;
+        }
+
+        .tarjeta-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--color-texto);
+        }
+
+        .tarjeta-info p {
+            font-size: 0.85rem;
+            color: var(--color-subtexto);
+        }
+
+        .categoria-tag {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background-color: #334155;
+            color: var(--color-primario);
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Lightbox / Visor Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.92);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .modal-contenido {
+            max-width: 85%;
+            max-height: 70vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .modal-info {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .modal-info h3 {
+            color: var(--color-primario);
+            font-size: 1.3rem;
+        }
+
+        .modal-info p {
+            color: var(--color-subtexto);
+        }
+
+        .cerrar-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .btn-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .btn-nav:hover {
+            background: var(--color-primario);
+            color: #000;
+        }
+
+        .btn-prev { left: 20px; }
+        .btn-next { right: 20px; }
+
+        .contador {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            color: var(--color-subtexto);
+            font-size: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: var(--color-subtexto);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Mi Galería de Fotos</h1>
+        <p>Explora mi colección de capturas clasificadas por categorías</p>
+    </header>
+
+    <section class="controles">
+        <!-- Buscador -->
+        <div class="buscador">
+            <input type="text" id="inputBuscar" placeholder="Buscar por título o descripción..." onkeyup="filtrarFotos()">
+        </div>
+
+        <!-- Botones de Filtro -->
+        <div class="filtros">
+            <button class="btn-filtro activo" onclick="filtrarCategoria('todas', this)">Todas</button>
+            <button class="btn-filtro" onclick="filtrarCategoria('naturaleza', this)">Naturaleza</button>
+            <button class="btn-filtro" onclick="filtrarCategoria('urbano', this)">Urbano</button>
+            <button class="btn-filtro" onclick="filtrarCategoria('retratos', this)">Retratos</button>
+        </div>
+    </section>
+
+    <!-- Contenedor principal de la galería -->
+    <main class="galeria-grid" id="galeriaGrid">
+        
+        <!-- Foto 1 -->
+        <div class="tarjeta" data-categoria="naturaleza" onclick="abrirModal(0)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=1" alt="Atardecer en la montaña">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Atardecer en el Valle</h3>
+                <p>Una vista panorámica de la cordillera durante el ocaso.</p>
+                <span class="categoria-tag">Naturaleza</span>
+            </div>
+        </div>
+
+        <!-- Foto 2 -->
+        <div class="tarjeta" data-categoria="urbano" onclick="abrirModal(1)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=2" alt="Luces de la ciudad">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Noche de Luces</h3>
+                <p>Fotografía nocturna de la arquitectura en el centro urbano.</p>
+                <span class="categoria-tag">Urbano</span>
+            </div>
+        </div>
+
+        <!-- Foto 3 -->
+        <div class="tarjeta" data-categoria="retratos" onclick="abrirModal(2)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=3" alt="Retrato expresivo">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Expresiones</h3>
+                <p>Estudio de iluminación y sombras en retrato de estudio.</p>
+                <span class="categoria-tag">Retratos</span>
+            </div>
+        </div>
+
+        <!-- Foto 4 -->
+        <div class="tarjeta" data-categoria="naturaleza" onclick="abrirModal(3)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=4" alt="Bosque místico">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Bosque Nublado</h3>
+                <p>Captura de la vegetación espesa durante una mañana de niebla.</p>
+                <span class="categoria-tag">Naturaleza</span>
+            </div>
+        </div>
+
+        <!-- Foto 5 -->
+        <div class="tarjeta" data-categoria="urbano" onclick="abrirModal(4)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=5" alt="Arquitectura moderna">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Líneas Modernas</h3>
+                <p>Geometría y diseño contemporáneo de rascacielos.</p>
+                <span class="categoria-tag">Urbano</span>
+            </div>
+        </div>
+
+        <!-- Foto 6 -->
+        <div class="tarjeta" data-categoria="retratos" onclick="abrirModal(5)">
+            <div class="tarjeta-img">
+                <img src="https://picsum.photos/800/600?random=6" alt="Mirada al horizonte">
+            </div>
+            <div class="tarjeta-info">
+                <h3>Luz Natural</h3>
+                <p>Retrato al aire libre aprovechando la hora dorada.</p>
+                <span class="categoria-tag">Retratos</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Visor de Foto Ampliada (Modal / Lightbox) -->
+    <div id="modalVisor" class="modal">
+        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+        <div class="contador" id="modalContador">1 / 6</div>
+        
+        <button class="btn-nav btn-prev" onclick="cambiarFoto(-1)">&#10094;</button>
+        <img class="modal-contenido" id="imagenModal" src="" alt="">
+        <button class="btn-nav btn-next" onclick="cambiarFoto(1)">&#10095;</button>
+
+        <div class="modal-info">
+            <h3 id="modalTitulo"></h3>
+            <p id="modalDesc"></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Mi Portafolio - Creado para Adobe Dreamweaver</p>
+    </footer>
+
+    <!-- Scripts de Interactividad -->
+    <script>
+        let indiceActual = 0;
+        let tarjetasVisibles = [];
+
+        // Obtener la lista de fotos según los elementos del HTML
+        function obtenerDatosFotos() {
+            const tarjetas = document.querySelectorAll('.tarjeta');
+            const lista = [];
+            
+            tarjetas.forEach((tarjeta, index) => {
+                if (tarjeta.style.display !== 'none') {
+                    lista.push({
+                        src: tarjeta.querySelector('img').src,
+                        titulo: tarjeta.querySelector('h3').innerText,
+                        desc: tarjeta.querySelector('p').innerText,
+                        elementoOriginal: index
+                    });
+                }
+            });
+            return lista;
+        }
+
+        function abrirModal(indexOriginal) {
+            tarjetasVisibles = obtenerDatosFotos();
+            // Buscar la posición actual entre las fotos visibles
+            indiceActual = tarjetasVisibles.findIndex(item => item.elementoOriginal === indexOriginal);
+            if (indiceActual === -1) indiceActual = 0;
+            
+            actualizarModal();
+            document.getElementById("modalVisor").style.display = "flex";
+        }
+
+        function actualizarModal() {
+            if (tarjetasVisibles.length === 0) return;
+            
+            const foto = tarjetasVisibles[indiceActual];
+            document.getElementById("imagenModal").src = foto.src;
+            document.getElementById("modalTitulo").innerText = foto.titulo;
+            document.getElementById("modalDesc").innerText = foto.desc;
+            document.getElementById("modalContador").innerText = `${indiceActual + 1} / ${tarjetasVisibles.length}`;
+        }
+
+        function cambiarFoto(direccion) {
+            indiceActual += direccion;
+            if (indiceActual < 0) {
+                indiceActual = tarjetasVisibles.length - 1;
+            } else if (indiceActual >= tarjetasVisibles.length) {
+                indiceActual = 0;
+            }
+            actualizarModal();
+        }
+
+        function cerrarModal() {
+            document.getElementById("modalVisor").style.display = "none";
+        }
+
+        // Filtro por categorías
+        function filtrarCategoria(categoria, boton) {
+            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('activo'));
+            boton.classList.add('activo');
+
+            const tarjetas = document.querySelectorAll('.tarjeta');
+            tarjetas.forEach(tarjeta => {
+                const catTarjeta = tarjeta.getAttribute('data-categoria');
+                if (categoria === 'todas' || catTarjeta === categoria) {
+                    tarjeta.style.display = 'flex';
+                } else {
+                    tarjeta.style.display = 'none';
+                }
+            });
+        }
+
+        // Buscador por texto
+        function filtrarFotos() {
+            const texto = document.getElementById('inputBuscar').value.toLowerCase();
+            const tarjetas = document.querySelectorAll('.tarjeta');
+
+            tarjetas.forEach(tarjeta => {
+                const titulo = tarjeta.querySelector('h3').innerText.toLowerCase();
+                const desc = tarjeta.querySelector('p').innerText.toLowerCase();
+
+                if (titulo.includes(texto) || desc.includes(texto)) {
+                    tarjeta.style.display = 'flex';
+                } else {
+                    tarjeta.style.display = 'none';
+                }
+            });
+        }
+
+        // Control por teclado (Esc para cerrar, Flechas para navegar)
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById("modalVisor");
+            if (modal.style.display === "flex") {
+                if (e.key === "Escape") cerrarModal();
+                if (e.key === "ArrowLeft") cambiarFoto(-1);
+                if (e.key === "ArrowRight") cambiarFoto(1);
+            }
+        });
+    </script>
+</body>
+</html>
